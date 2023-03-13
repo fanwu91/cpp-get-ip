@@ -25,7 +25,7 @@ namespace {
 
             // IPV4
             if (ifa->ifa_addr != nullptr && ifa->ifa_addr->sa_family == AF_INET) {
-                int s = getnameinfo(ifa->ifa_addr, sizeof(struct socktaddr_in),
+                int s = getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in),
                     ip_buf, ip_buf_size, nullptr, 0, NI_NUMERICHOST);
                 
                 if (s != 0) {
@@ -52,6 +52,12 @@ namespace {
         freeifaddrs(ifaddr);
         return res;
     }
+
+    bool is_little_endian() {
+        int a = 0x12345678;
+        char b = *((char*)&a);
+        return 0x78 == b;
+    }
 } // namespace ("anonymous")
 
 int main() {
@@ -63,5 +69,12 @@ int main() {
     }
 
     unsigned char* m = (unsigned char*)(&mac);
-    printf("IP: %s, MAC: %.2X%.2X%.2X%.2X%.2X%.2X\n", ip, m[0], m[1], m[2], m[3], m[4], m[5]);
+    if (is_little_endian()) {
+        // 小端
+        printf("IP: %s, MAC: %.2X%.2X%.2X%.2X%.2X%.2X\n", ip, m[0], m[1], m[2], m[3], m[4], m[5]);
+    } else {
+        // 大端
+        printf("IP: %s, MAC: %.2X%.2X%.2X%.2X%.2X%.2X\n", ip, m[5], m[4], m[3], m[2], m[1], m[0]);
+    }
+    return 0;
 }
